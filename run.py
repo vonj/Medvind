@@ -43,8 +43,6 @@ except configparser.NoOptionError:
     firefox = '/usr/bin/firefox'
 
 
-print(firefox)
-
 def sendreport(report):
 
     port = 588
@@ -144,9 +142,7 @@ def extract_hours(txt):
 
 
 if __name__ == '__main__':
-    # drv = webdriver.Chrome()
     option = webdriver.FirefoxOptions()
-#    option.binary_location = os.path.join(pathlib.Path.home(),'bin','Firefox.app','Contents','MacOS', 'firefox')
     option.binary_location = firefox
     driverService = Service('/path/to/geckodriver')
     drv = webdriver.Firefox(service=driverService, options=option)
