@@ -1,0 +1,13 @@
+[email]
+username = 
+password = 
+sender = 
+to = 
+server = 
+
+[medvind]
+username = 
+password = 
+
+[firefox]
+;exepath = ''
