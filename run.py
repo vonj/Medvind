@@ -150,7 +150,7 @@ def convert_to_ical(days):
         end   = days[dayk]['end']
         if start != '23:00' and end != '00:00':
             event = Event()
-            event.add('summary', 'jobb')
+            event.add('summary', 'Krn')
 
             splits = dayk.split('-')
             year  = int(splits[0])
