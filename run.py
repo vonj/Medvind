@@ -152,7 +152,7 @@ def convert_to_ical(days):
             event = Event()
             event.add('summary', 'jobb')
 
-            splits = day.split('-')
+            splits = dayk.split('-')
             year  = int(splits[0])
             month = int(splits[1])
             day   = int(splits[2])
