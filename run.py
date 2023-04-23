@@ -23,6 +23,7 @@ from email.mime.text import MIMEText
 from email.header import Header
 from email.utils import formataddr
 import ssl
+from icalendar import Calendar, Event
 
 
 config = configparser.ConfigParser()
@@ -140,6 +141,35 @@ def extract_hours(txt):
     )
 
 
+def convert_to_ical(days):
+
+    cal = Calendar()
+
+    for dayk in days:
+        start = days[dayk]['start']
+        end   = days[dayk]['end']
+        if start != '23:00' and end != '00:00':
+            event = Event()
+            event.add('summary', 'jobb')
+
+            splits = day.split('-')
+            year  = int(splits[0])
+            month = int(splits[1])
+            day   = int(splits[2])
+
+            start_hour   = start.split(':')[0]
+            start_minute = start.split(':')[1]
+            event.add('dtstart', year, month, day, start_hour, start_minute, 0, 0)
+
+            end_hour     = end.split(':')[0]
+            end_minute   = end.split(':')[1]
+            event.add('dtend',   year, month, day, end_hour, end_minute, 0, 0)
+
+            cal.add_component(event)
+
+    with open('jobschedule.ics', 'wb') as f:
+        f.write(cal.to_ical())
+
 
 if __name__ == '__main__':
     option = webdriver.FirefoxOptions()
@@ -246,6 +276,8 @@ if __name__ == '__main__':
             'start': start,
             'end':   end
         }
+
+    convert_to_ical(samples['days'])
     
     if len(changes) > 0:
         with open(logfile, 'w') as f:
