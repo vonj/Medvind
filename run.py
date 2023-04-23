@@ -159,11 +159,11 @@ def convert_to_ical(days):
 
             start_hour   = start.split(':')[0]
             start_minute = start.split(':')[1]
-            event.add('dtstart', year, month, day, start_hour, start_minute, 0, 0)
+            event.add('dtstart', datetime(year, month, day, start_hour, start_minute, 0, 0))
 
             end_hour     = end.split(':')[0]
             end_minute   = end.split(':')[1]
-            event.add('dtend',   year, month, day, end_hour, end_minute, 0, 0)
+            event.add('dtend',   datetime(year, month, day, end_hour, end_minute, 0, 0))
 
             cal.add_component(event)
             print(event)
