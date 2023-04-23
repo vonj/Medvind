@@ -264,6 +264,7 @@ if __name__ == '__main__':
     
     for content in soup.find_all('div', {'class': 'mv-daycell'}):
         txt = content.text
+        print(':  ', txt)
         day = extract_date(txt).strftime('%Y-%m-%d')
         (start, end) = extract_hours(txt)
 
