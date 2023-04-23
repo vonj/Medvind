@@ -166,6 +166,9 @@ def convert_to_ical(days):
             event.add('dtend',   year, month, day, end_hour, end_minute, 0, 0)
 
             cal.add_component(event)
+            print(event)
+        else:
+            print('skip empty day')
 
     with open('jobschedule.ics', 'wb') as f:
         f.write(cal.to_ical())
