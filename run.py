@@ -205,6 +205,9 @@ if __name__ == '__main__':
 
     time.sleep(20)
     drv.quit()
+    time.sleep(2)
+    os.system("killall firefox")
+
     #drv.close()
 
     f = open(fullpath, 'r')
