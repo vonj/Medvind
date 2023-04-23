@@ -157,12 +157,12 @@ def convert_to_ical(days):
             month = int(splits[1])
             day   = int(splits[2])
 
-            start_hour   = start.split(':')[0]
-            start_minute = start.split(':')[1]
+            start_hour   = int(start.split(':')[0])
+            start_minute = int(start.split(':')[1])
             event.add('dtstart', datetime(year, month, day, start_hour, start_minute, 0, 0))
 
-            end_hour     = end.split(':')[0]
-            end_minute   = end.split(':')[1]
+            end_hour     = int(end.split(':')[0])
+            end_minute   = int(end.split(':')[1])
             event.add('dtend',   datetime(year, month, day, end_hour, end_minute, 0, 0))
 
             cal.add_component(event)
