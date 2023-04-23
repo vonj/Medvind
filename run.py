@@ -185,7 +185,7 @@ if __name__ == '__main__':
     # "Medvind-ux-field-Edit-1014-inputEl"
     # "Medvind-ux-field-Edit-1015-inputEl"
     drv.get('https://medvind-mobil.kronansapotek.se/MvWeb/')
-    time.sleep(1)
+    time.sleep(10)
 
     original_window = drv.current_window_handle
     assert len(drv.window_handles) == 1
