@@ -68,76 +68,65 @@ def sendreport(report):
 
 found_today = False
 
-def extract_date(txt):
+def extract_date(txt, sampletime):
     global found_today
-    year = now.year
+    year = sampletime.year
 
     day, month = [int(x) for x in txt.split()[0].strip().split('/') ]
 
-    if month == now.month and day == now.day:
+    if month == sampletime.month and day == sampletime.day:
         found_today = True
-    
-    if not found_today and month > now.month:
+
+    if not found_today and month > sampletime.month:
         year -= 1
-    
-    if found_today and month < now.month:
+
+    if found_today and month < sampletime.month:
         year += 1
 
-    date = datetime(year, month, day)    
+    date = datetime(year, month, day)
 
     return date
 
 def match_clock(s):
-    try:        
-        if s[2] != ':':
-            return False
-        if s[5] != '-':
-            return False
-        if s[8] != ':':
-            return False
+    if len(s) < 5:
+        return False
+    if s[2] != ':':
+        return False
+    try:
+        hour   = int(s[0:2])
+        minute = int(s[3:5])
+    except ValueError:
+        return False
     except IndexError:
         return False
+    print(hour, ':', minute)
 
-    try:
-        start_hour   = int(s[0:2])
-        start_minute = int(s[3:5])
-        end_hour     = int(s[6:8])
-        end_minute   = int(s[9:11])
-        
-        start_minute += start_hour * 60
-        end_minute   += end_hour   * 60
-        return [start_minute, end_minute]
-    except ValueError as e:
-        print('ValueError', e)
-        pass
+    return 60 * hour + minute
 
-    return False
 
-def extract_hours(txt):
+def extract_working_hours(s):
+    lowest = 60 * 23 + 59
+    highest = 0
 
-    sta_minute = 23 * 60
-    end_minute = 0
+    clocks = []
 
-    i = 0
-    while len(txt[i:]) > 0:
-        result = match_clock(txt[i:])
-        if False == result:
-            pass
-        else:
-            if result[0] < sta_minute:
-                sta_minute = result[0]
-            if result[1] > end_minute:
-                end_minute = result[1]
-        i += 1
-    
-    sta_hour    = sta_minute // 60
-    sta_minute %= 60
-    end_hour    = end_minute // 60
-    end_minute %= 60
+    while len(s):
+        clock = match_clock(s)
+        if False != clock:
+            if lowest > clock:
+                lowest = clock
+            if highest < clock:
+                highest = clock
+        s = s[1:]
+
+    sta_hour    = lowest // 60
+    sta_minute  = lowest % 60
+    end_hour    = highest // 60
+    end_minute  = highest % 60
 
     return (
         "{0:0>2}".format(sta_hour) + ":" + "{0:0>2}".format(sta_minute),
-        "{0:0>2}".format(end_hour) + ":" + "{0:0>2}".format(sta_minute)
+        "{0:0>2}".format(end_hour) + ":" + "{0:0>2}".format(end_minute)
     )
 
 
@@ -174,18 +163,18 @@ def convert_to_ical(days):
         f.write(cal.to_ical())
 
 
-if __name__ == '__main__':
+def download_html():
     option = webdriver.FirefoxOptions()
     option.binary_location = firefox
     driverService = Service('/path/to/geckodriver')
     drv = webdriver.Firefox(service=driverService, options=option)
-    drv.set_page_load_timeout(60)
+    drv.set_page_load_timeout(80)
 
     # ff = webdriver.Firefox(executable_path=r'your\path\geckodriver.exe')
     # "Medvind-ux-field-Edit-1014-inputEl"
     # "Medvind-ux-field-Edit-1015-inputEl"
     drv.get('https://medvind-mobil.kronansapotek.se/MvWeb/')
-    time.sleep(20)
+    time.sleep(3)
 
     original_window = drv.current_window_handle
     assert len(drv.window_handles) == 1
@@ -198,8 +187,7 @@ if __name__ == '__main__':
     login.send_keys(medvind_username)
     time.sleep(1)
     password.send_keys(medvind_password)
-    time.sleep(1)
-
+    time.sleep(5)
 
     try:
         # drv.find_element(By.ID, 'button-1017-btnWrap').click()
@@ -211,7 +199,7 @@ if __name__ == '__main__':
         pass
 
     downloads = os.path.join(pathlib.Path.home(), 'Downloads')
-    
+
     filename = 'Medvind.html'
     fullpath = os.path.join(downloads, filename)
     try:
@@ -221,14 +209,14 @@ if __name__ == '__main__':
 
     shutil.rmtree(os.path.join(downloads, 'Medvind_files'), ignore_errors=True)
 
-    time.sleep(30)
+    time.sleep(10)
 
     pyautogui.hotkey('ctrl', 's')
     time.sleep(10)
 
     #with pyautogui.hold('command'):
     #    pyautogui.press('s')
-    
+
     # pyautogui.keyDown('command')
     # pyautogui.keyUp('command')
     # pyautogui.press('tab', presses = 11, interval = 0.2)
@@ -241,11 +229,14 @@ if __name__ == '__main__':
     time.sleep(2)
     os.system("killall firefox")
 
-    #drv.close()
+    return fullpath
 
+
+def parse_calendar(fullpath, logfile):
     f = open(fullpath, 'r')
+
     t = os.path.getmtime(fullpath)
-    now = datetime.fromtimestamp(t)
+    sampletime = datetime.fromtimestamp(t)
 
     filecontent = f.read()
     soup = BeautifulSoup(filecontent, 'html.parser')
@@ -258,15 +249,14 @@ if __name__ == '__main__':
         'days': {}
     }
 
-    logfile = 'medvind_log.txt'
     logcontents = pathlib.Path(logfile).read_text()
     changes = []
-    
+
     for content in soup.find_all('div', {'class': 'mv-daycell'}):
         txt = content.text
         print(':  ', txt)
-        day = extract_date(txt).strftime('%Y-%m-%d')
-        (start, end) = extract_hours(txt)
+        day = extract_date(txt, sampletime).strftime('%Y-%m-%d')
+        (start, end) = extract_working_hours(txt)
 
         if day in previous['days']:
             that_day = previous['days'][day]
@@ -276,13 +266,28 @@ if __name__ == '__main__':
                 )
 
         samples['days'][day] = {
-            'last_change': now.isoformat(),
+            'last_change': sampletime.isoformat(),
             'start': start,
             'end':   end
         }
 
+    with open(stored_file, 'w') as f:
+        f.write(json.dumps(samples, indent = 2))
+
+
+    return samples, changes, logcontents
+
+
+def run_all(now):
+
+    fullpath = download_html()
+
+    logfile = 'medvind_log.txt'
+
+    samples, changes, logcontents = parse_calendar(fullpath, logfile)
+
     convert_to_ical(samples['days'])
-    
+
     if len(changes) > 0:
         with open(logfile, 'w') as f:
             f.write('\n'.join(changes))
@@ -297,6 +302,25 @@ if __name__ == '__main__':
 
     # print('Previous run at: ', datetime.fromisoformat(previous['sample_time']))
 
-    with open(stored_file, 'w') as f:
-        f.write(json.dumps(samples, indent = 2))
+    return 0
 
+
+if __name__ == '__main__':
+    if sys.argv[1] == 'test':
+        # samples, changes, logcontents = parse_calendar('Medvind.html', 'testlog.txt')
+        # print(samples)
+        # print('---------')
+        # print(samples['days']['2023-04-23'])
+        txt = '23/4 sönLedig10:45-11:00Öp11:00-15:00Ar    Egenvård15:00-15:20St    Kassaräkning'
+        print(txt)
+        # t = os.path.getmtime('latest.json')
+        t = 1682461710.568336
+        sampletime = datetime.fromtimestamp(t)
+        day = extract_date(txt, sampletime).strftime('%Y-%m-%d')
+        (start, end) = extract_working_hours(txt)
+        print('day:', day)
+        print('hours:', start, end)
+        sys.exit(0)
+
+
+    sys.exit(run_all())
