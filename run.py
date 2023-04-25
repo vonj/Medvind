@@ -278,8 +278,7 @@ def parse_calendar(fullpath, logfile):
     return samples, changes, logcontents
 
 
-def run_all(now):
-
+def run_all():
     fullpath = download_html()
 
     logfile = 'medvind_log.txt'
