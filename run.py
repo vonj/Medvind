@@ -292,7 +292,7 @@ def run_all(now):
         with open(logfile, 'w') as f:
             f.write('\n'.join(changes))
             f.write("\n")
-            f.write(f"   (Ändringar upptäckta: {str(now)[:16]})\n")
+            # f.write(f"   (Ändringar upptäckta: {str(now)[:16]})\n")
             f.write("\n")
             f.write("\n")
             f.write(logcontents)
