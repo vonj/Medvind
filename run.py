@@ -306,7 +306,7 @@ def run_all(now):
 
 
 if __name__ == '__main__':
-    if sys.argv[1] == 'test':
+    if len(sys.argv) > 1 and sys.argv[1] == 'test':
         # samples, changes, logcontents = parse_calendar('Medvind.html', 'testlog.txt')
         # print(samples)
         # print('---------')
