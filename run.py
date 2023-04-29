@@ -24,6 +24,7 @@ from email.header import Header
 from email.utils import formataddr
 import ssl
 from icalendar import Calendar, Event
+import re
 
 
 config = configparser.ConfigParser()
@@ -99,7 +100,6 @@ def match_clock(s):
         return False
     except IndexError:
         return False
-    print(hour, ':', minute)
 
     return 60 * hour + minute
 
@@ -118,6 +118,9 @@ def extract_working_hours(s):
             if highest < clock:
                 highest = clock
         s = s[1:]
+
+    if (highest - lowest) < 30:
+        return (None, None)
 
     sta_hour    = lowest // 60
     sta_minute  = lowest % 60
@@ -232,10 +235,10 @@ def download_html():
     return fullpath
 
 
-def parse_calendar(fullpath, logfile):
-    f = open(fullpath, 'r')
+def parse_calendar(htmlfile, logfile):
+    f = open(htmlfile, 'r')
 
-    t = os.path.getmtime(fullpath)
+    t = os.path.getmtime(htmlfile)
     sampletime = datetime.fromtimestamp(t)
 
     filecontent = f.read()
@@ -253,10 +256,15 @@ def parse_calendar(fullpath, logfile):
     changes = []
 
     for content in soup.find_all('div', {'class': 'mv-daycell'}):
-        txt = content.text
-        print(':  ', txt)
-        day = extract_date(txt, sampletime).strftime('%Y-%m-%d')
-        (start, end) = extract_working_hours(txt)
+        day = extract_date(content.text, sampletime).strftime('%Y-%m-%d')
+
+        times = ''
+        for sub in content.find_all('div', {'style': re.compile('.*FF00FF')}):
+            times += sub.text
+
+        (start, end) = extract_working_hours(times)
+        if None == start:
+            (start, end) = extract_working_hours(content.text)
 
         if day in previous['days']:
             that_day = previous['days'][day]
@@ -319,6 +327,8 @@ if __name__ == '__main__':
         (start, end) = extract_working_hours(txt)
         print('day:', day)
         print('hours:', start, end)
+
+        parse_calendar('Medvind.html', 'testlog.txt')
         sys.exit(0)
 
 
