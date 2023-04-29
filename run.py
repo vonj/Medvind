@@ -105,8 +105,11 @@ def match_clock(s):
 
 
 def extract_working_hours(s):
-    lowest = 60 * 23 + 59
-    highest = 0
+    errorlow = 60 * 23 + 59
+    errorhigh = 0
+
+    lowest = errorlow
+    highest = errorhigh
 
     clocks = []
 
@@ -120,7 +123,8 @@ def extract_working_hours(s):
         s = s[1:]
 
     if (highest - lowest) < 30:
-        return (None, None)
+        lowest = errorlow
+        highest = errorhigh
 
     sta_hour    = lowest // 60
     sta_minute  = lowest % 60
@@ -263,7 +267,8 @@ def parse_calendar(htmlfile, logfile):
             times += sub.text
 
         (start, end) = extract_working_hours(times)
-        if None == start:
+        if end == '00:00':
+            # fallback
             (start, end) = extract_working_hours(content.text)
 
         if day in previous['days']:
